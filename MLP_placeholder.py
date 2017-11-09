@@ -91,13 +91,26 @@ val_target = np.array(y[:1920])
 
 sess = tf.InteractiveSession()
 batch_size = tf.placeholder(tf.int32)
-_X = tf.placeholder( )      # TODO：Add here
-y = tf.placeholder( )       # TODO: Add here
+_X = tf.placeholder(tf.float32, [None, 71, 36])      # TODO：Add here
+y = tf.placeholder(tf.float32, [None, 3])       # TODO: Add here
 
 # TODO: --------------------------------------------
 # TODO:       Construct MLP computation graph
 # TODO: --------------------------------------------
+line = tf.reshape(_X, [-1, 2556])
 
+W1 = tf.Variable(tf.zeros([2556,256]))
+b1 = tf.Variable(tf.zeros([256]))
+
+h1 = tf.matmul(line,W1)+b1
+
+W2 = tf.Variable(tf.zeros([256,256]))
+b2 = tf.Variable(tf.zeros([256]))
+h2 = tf.matmul(h1,W2)+b2
+
+W3 = tf.Variable(tf.zeros([256,3]))
+b3 = tf.Variable(tf.zeros([3]))
+y_pre = tf.matmul(h2,W3)+b3
 
 
 # TODO: --------------------------------------------
@@ -105,9 +118,12 @@ y = tf.placeholder( )       # TODO: Add here
 # TODO: --------------------------------------------
 
 
-cost =
-accuracy =
-optimizer =
+cost = tf.reduce_mean(tf.abs(y_pre-y),0)
+# accuracy =
+optimizer = tf.train.AdamOptimizer(lr).minimize(cost)
+
+
+
 
 # TODO:--------------------------------------------
 # TODO:              Start Training
@@ -120,5 +136,5 @@ with tf.Session() as sess:
         for i in range(total_batch):
             _, c = sess.run([optimizer, cost],
                             feed_dict={_X: training_set,
-                                       y:training_target})
+                                       y: training_target})
             avg_cost += c / total_batch

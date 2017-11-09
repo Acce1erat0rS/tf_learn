@@ -10,6 +10,7 @@ class ProgressBar:
         sys.stdout.write(' ' * (self.width + 9) + '\r')
         sys.stdout.flush()
         #print s
+        progress =0
         progress = self.width * self.count / self.total
         percent = self.count/float(self.total) *100
         sys.stdout.write('{0:3}/{1:3}: '.format(self.count, self.total))

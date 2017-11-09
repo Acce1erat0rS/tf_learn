@@ -4,9 +4,11 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 import random
 import ProgressBar as pb
+import threading as thd
 
 
 hop = 71
+z = 0
 timestep_size = 71                # Hours of looking ahead
 output_parameters = 3   # Number of predicting parameters
 num_stations = 3        # Number of monitoring stations
@@ -52,6 +54,9 @@ cur_start = start
 cur_end = start+hop*3600
 count = 0
 
+
+
+
 bar = pb.ProgressBar(total=(end-start)/3600)
 while(cur_end < end-(120+288)*3600):
     bar.move()
@@ -59,20 +64,46 @@ while(cur_end < end-(120+288)*3600):
     if(count % 100 == 0):
         bar.log('Preparing : ' + str(cur_end) + ' till 1448564400')
     buff = []
-    for i in range(hop):
-        hour = []
-        f1 = open(data_dir+(str)(cur_start+i*3600), 'rb')
-        for line in f1.readlines():
-            ls = line.split('#')
-            hour = hour+(map(float, ls[4:16]))
-        f1.close()
-        buff.append(hour)
-    data.append(buff)
-    f1 = open(data_dir+(str)(cur_start+120*3600), 'rb')
-    for line in f1.readlines():
-        ls = line.split("#")
-        target_set.append(map(float, ls[7:10]))
-        break
+    class threading:
+        MAX_thread = 16
+        cur_thread = 0
+        threadCount = 0
+        def flag(self):
+            return self.threadCount<self.MAX_thread
+
+        def minus(self):
+            self.threadCount -= 1
+
+        def add(self):
+            self.threadCount += 1
+
+        def process(self, time):
+            self.add()
+            for i in range(hop):
+                hour = []
+                f1 = open(data_dir + (str)(time + i * 3600), 'rb')
+                for line in f1.readlines():
+                    ls = line.split('#')
+                    hour = hour + (map(float, ls[4:16]))
+                f1.close()
+                buff.append(hour)
+            data.append(buff)
+            f1 = open(data_dir + (str)(time + 120 * 3600), 'rb')
+            for line in f1.readlines():
+                ls = line.split("#")
+                target_set.append(map(float, ls[7:10]))
+                break
+            self.minus()
+
+    th = threading()
+
+    if(th.flag()):
+        subthread = thd.Thread(target=th.process, args=([cur_start]))
+        subthread.setDaemon(True)
+        subthread.start()
+
+
+
     cur_start = cur_start+3600
     cur_end = cur_end+3600
 print(len(target_set))
@@ -140,7 +171,7 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 #               Start Training
 # --------------------------------------------
 
-sess.run(tf.global_variables_initializer())
+tf.global_variables_initializer().run()
 count = 0
 for i in range(training_epochs):
     for batch in range(5, 36):
