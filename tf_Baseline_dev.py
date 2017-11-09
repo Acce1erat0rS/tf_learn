@@ -91,7 +91,8 @@ while(cur_end < end-(120+288)*3600):
             f1 = open(data_dir + (str)(time + 120 * 3600), 'rb')
             for line in f1.readlines():
                 ls = line.split("#")
-                target_set.append(map(float, ls[7:10]))
+                a = map(float, ls[7:10])
+                target_set.append(a)
                 break
             self.minus()
 
@@ -106,7 +107,8 @@ while(cur_end < end-(120+288)*3600):
 
     cur_start = cur_start+3600
     cur_end = cur_end+3600
-print(len(target_set))
+print(np.shape(data))
+print(np.shape(target_set))
 np_data = np.asarray(data)
 np_target = np.asarray(target_set)
 print("Target shape :", np_target.shape)
